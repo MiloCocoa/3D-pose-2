@@ -1,0 +1,10 @@
+torch
+torch-geometric
+fastapi
+uvicorn
+scikit-learn
+pandas
+numpy
+scipy
+pydantic
+python-multipart

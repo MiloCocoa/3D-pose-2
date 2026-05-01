@@ -1,0 +1,11 @@
+added the plans stuff. refer to it for later.
+
+edit the model a bit based on reference repo (3D-pose)
+
+made data scanner as a utility to check file errors (null joints)
+
+added in config data file paths
+
+edit the data to remove unnecessary parts (front and back) of the sequence to only inlude only the rep performed.
+
+phase 1 smoke test done

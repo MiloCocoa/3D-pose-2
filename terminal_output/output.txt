@@ -1,0 +1,14 @@
+INFO:     127.0.0.1:58726 - "POST /analyze HTTP/1.1" 200 OK
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
+INFO:     127.0.0.1:58732 - "POST /analyze HTTP/1.1" 200 OK

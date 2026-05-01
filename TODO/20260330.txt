@@ -1,0 +1,22 @@
+### Current Status (2026-03-30)
+- **Architecture**: Dual-Head system (Rule-Based + ST-GCN) with Virtual Node Synthesis (Mid-Hip, Mid-Shoulder, Mid-Ear) is implemented in `src/rules/engine.py` and `src/inference.py`.
+- **Rule-Based Head**: Tracks 6 deterministic labels (Depth, Knee Valgus, Hip Shift/Tilt, etc.) using geometric thresholds.
+- **AI Head**: Specialized for 4 "Postural" labels (Thoracic, Trunk, Descent/Ascent Mechanics).
+
+### TODO: Immediate Next Steps
+1. **Model Refinement**:
+   - [ ] **Retrain ST-GCN**: Update `src/training/trainer.py` to target only the 4 postural labels (indices 6-9 in `LABELS`).
+   - [ ] **Data Augmentation**: Specifically collect/synthesize "core collapse" and "knee-loading" examples to boost AI head robustness.
+   - [ ] **Model Checkpoint**: Save the new 4-label weights to `models/multi_label_gcn_v2.pth`.
+
+2. **Frontend Readability**:
+   - [ ] **Mistake Categorization**: Update `frontend/src/components/MistakeList.tsx` to group errors by "Geometric/Safety" (Rules) vs "Postural/Form" (AI).
+   - [ ] **3D Visualizer**: Enhance `Skeleton3D.tsx` to highlight joints involved in specific errors (e.g., flash knees red for Valgus).
+   - [ ] **Phase Feedback**: Display the current motion phase (Descent/Bottom/Ascent) detected by the `SquatStateMachine`.
+
+3. **Validation**:
+   - [ ] **Threshold Tuning**: Validate `THRESHOLDS` in `src/config.py` against the test dataset (specifically `DEPTH_OFFSET` and `KNEE_VALGUS`).
+   - [ ] **Hybrid Inference Test**: Run a full integration test with `test-pos-seq-20260315` data to ensure 10-label fusion works correctly.
+
+4. **Documentation**:
+   - [ ] Update `README.md` to reflect the Dual-Head architecture and the use of Virtual Nodes.

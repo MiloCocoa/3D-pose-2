@@ -1,0 +1,7 @@
+Just created the basic part.
+
+ask gemini where it got the ai model from. we need to train and make inference with the model.
+
+implement the metrics.py part
+
+cleanup the frontend to look more presentable.

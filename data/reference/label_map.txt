@@ -1,0 +1,10 @@
+0   Head
+1   Thoracic
+2   Trunk
+3   Hip	
+4   Frontal Knee	
+5   Tibial Angle
+6   Foot	
+7   Descent	
+8   Depth	
+9   Ascent

@@ -1,0 +1,27 @@
+### Project Status: Dynamic Highlighting (Heatmap) Implementation - 2026-04-15
+
+**Accomplished Today:**
+- **Dynamic Highlighting Engine:** Implemented a per-frame severity tracking system in the Backend. 
+    - `src/rules/engine.py`: Modified `RuleBasedHead` to calculate severity scores (0.0 to 1.0) for each of the 6 geometric rules. 
+    - `src/inference.py`: Updated `InferenceEngine` to merge rule-based severity with AI-based confidence (probabilities) and aggregate them into a `joint_heatmap` of shape `(frames, 36)`.
+- **Phase-Constrained Analysis:** AI-based postural errors and certain rule-based errors (Hip, Knee, Tibial) are now strictly constrained to their relevant motion phases (Descent/Ascent) to prevent "ghost highlights" during setup or finish.
+- **Heatmap Visualization (Frontend):** 
+    - Enhanced `Skeleton3D.tsx` to utilize the `joint_heatmap` for real-time color interpolation.
+    - Joints and edges now transition from **Emerald (Pass)** to **Red (Fail)** based on the severity of the form deviation.
+    - Implemented "Accumulation" logic where multiple concurrent errors on a single joint increase its visual intensity.
+- **Backend Robustness:** Centralized the `LABEL_JOINT_MAP` in `src/config.py` to ensure all future frontends can leverage the same biomechanical logic.
+
+**Technical Notes (Critical for Next Session):**
+- **Severity Scaling:** Rule-based severity reaches 1.0 (Full Red) when the error exceeds the threshold by 50%.
+- **Depth Highlight:** Depth errors are now localized to the 11 frames surrounding the rep apex (Bottom), providing more intuitive feedback on exactly where depth was missed.
+- **AI Severity:** AI confidence scores (probabilities) are used directly as severity. This is current using the placeholder `v1` or `smoke` model. 
+- **Mapping Alignment:** `InferenceEngine.predict` now correctly aggregates based on the `LABELS` array (6 Rules + 4 AI). The `joint_heatmap` sent in the API response also follows this order.
+- **API Change:** The `/analyze` response now includes `joint_heatmap: number[][]` (shape: frames x 36).
+
+**Next Steps & Pending Tasks:**
+1. **Retrain AI Head (High Priority):** 
+   - Update `src/training/trainer.py` to initialize `MultiLabelGCN(num_labels=4)`. Currently, it defaults to 10 in the class definition.
+   - Run the trainer to generate `models/multi_label_gcn_v2.pth`.
+   - Ensure `InferenceEngine` is loading this `v2` model correctly.
+2. **Threshold Tuning:** Now that visual feedback is dynamic, use the `joint_heatmap` to visually verify if the `THRESHOLDS` in `config.py` are too sensitive or too lenient.
+3. **Skeleton Polish:** Edges in `Skeleton3D.tsx` currently interpolate severity from their start/end joints. Verify if certain edges (like the spine proxy) should have their own specialized logic.

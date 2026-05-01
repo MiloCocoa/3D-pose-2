@@ -1,0 +1,4 @@
+npx @google/gemini-cli
+uvicorn src.api.main:app --reload --port 8000
+cd frontend
+npm run dev

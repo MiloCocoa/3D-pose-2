@@ -1,0 +1,18 @@
+### Project Status: Phase 2 (Dual-Head Architecture Refinement) - 2026-04-11
+
+**Accomplished Today:**
+- **State Machine Evolution:** Renamed `SETUP` phase to `START`. Improved detection logic in `src/rules/engine.py` using a smoothed velocity threshold (`0.001`) to accurately detect the initiation of the `DESCENT`.
+- **Ground Truth Alignment:** Verified human-label convention: `True = PASS` (Emerald), `False = FAIL` (Red).
+- **Index Mapping Fix (Backend):** Updated `src/data_utils/loader.py` to correctly map postural labels (`Thoracic`, `Trunk`, `Descent`, `Ascent`) to the dataset metadata indices `[1, 2, 7, 9]`.
+- **Index Mapping Fix (Frontend):** Added `LABELS_DATASET` to `constants.ts` and updated `App.tsx` to ensure the Metadata card correctly names ground truth labels according to the source data.
+
+**Immediate Next Steps:**
+1. **Retrain AI Head:** Run the training pipeline to generate `models/multi_label_gcn_v2.pth`. The loader is now correctly aligned for this.
+2. **Dynamic Skeleton Highlighting (Mistake-by-Frame):** 
+   - Update `InferenceEngine.predict` to return a per-frame mistake bitmask (or list of active mistakes per frame).
+   - Enhance `Skeleton3D.tsx` to consume this frame-specific data so joints highlight only during the exact frames where the error is occurring, rather than statically for the whole rep.
+3. **Threshold Calibration:** Use the now-accurate Ground Truth display to tune `THRESHOLDS` in `config.py` (specifically `DEPTH_OFFSET` and `KNEE_VALGUS`).
+
+**Critical Continuity Information:**
+- **The Index Difference:** Always distinguish between `LABELS` (Functional Split: 6 Rules, 4 AI) and `LABELS_DATASET` (Source Order: Head, Thoracic, Trunk, Hip, etc.). All metadata lookups must use `LABELS_DATASET`.
+- **Model State:** The `InferenceEngine` is wired for a 4-label ST-GCN. AI results will be placeholder/unreliable until `v2` weights are trained and loaded.

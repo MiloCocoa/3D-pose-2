@@ -1,0 +1,39 @@
+Done: 
+- Phase 1, Phase 2 in data_sparsity_plan completed, wait for data to continue with Phase 3.
+- Rule-Based + ST-GCN -> refer dual-head_plan.md
+
+
+Next Steps: Implement the rule-based part, make adjustment to the st-gcn ai/ml head.
+
+1. Mathematical Thresholds for Rule-Based Labels
+  The "Rule-Based Head" needs hard numbers. You should define:
+   * Depth Threshold: At what vertical distance ($Y$-axis) between the Hip (23/24) and Knee (25/26) is a rep
+     considered "too shallow"? (e.g., Hip Y <= Knee Y + 5cm).
+   * Frontal Knee Cave: How many degrees of inward rotation or what horizontal distance ($X$-axis) relative to the
+     ankle defines a "Knee Cave"?
+   * Foot Contact: What is the maximum allowed $Y$-axis spike for the heel before it's flagged as "Heel Lift"?
+
+  2. Decision Logic (The "Fusion" Plan)
+  Since the ST-GCN currently predicts all 10 labels, you need to decide how to handle conflicts:
+   * Override: Does the Rule-Based Head have the "final say" on its 6 labels, completely ignoring the ST-GCN's output
+     for them?
+   * Voting: Do you average the results?
+   * Refactor: Should the ST-GCN be retrained to only output the 4 labels it's responsible for (Thoracic, Trunk,     
+     Descent, Ascent)?
+
+  3. Data Annotation for "Postural" Errors
+  Since the ST-GCN is now the "expert" for Thoracic and Trunk stability, you'll need to explicitly label your Phase  
+  3/4 data with these subtle errors. These are harder to see than a "knee cave," so you might need to record "good"  
+  vs "collapsing" core stability intentionally.
+
+
+  1 Next Steps (Detailed):
+   2 - [ ] Create `src/rules/engine.py`: Implement 3D trigonometric functions for the 6 "Perfect Fit" labels.
+   3 - [ ] Refactor `src/model/gcn.py`: Update the output layer from 10 to 4 neurons if we decide on a strict expert
+     split.
+   4 - [ ] Update `src/inference.py`: Create a `HybridInference` class that runs both the `RuleEngine` and
+     `InferenceEngine` and fuses their outputs.
+   5 - [ ] Define "Rule Constants": Document the exact biomechanical thresholds (angles/distances) for Depth and Knee
+     Position in `src/config.py`.
+   6 - [ ] Phase 3 Prep: Start collecting "Pilot" data focusing specifically on Thoracic/Trunk stability to train the
+     ST-GCN "Expert" head.
