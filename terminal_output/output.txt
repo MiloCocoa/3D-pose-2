@@ -1,14 +1,41 @@
-INFO:     127.0.0.1:58726 - "POST /analyze HTTP/1.1" 200 OK
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-Frame parsing error: float() argument must be a string or a real number, not 'NoneType'
-INFO:     127.0.0.1:58732 - "POST /analyze HTTP/1.1" 200 OK
+(.venv) C:\Users\User\Desktop\GitHub\3D-pose-2>python evaluate_full_system.py   
+Detected Multi-Stream model input features: 10
+Loaded 4-label model from models\multi_label_gcn_v5.pth
+
+=====================================================================================
+DATASET CLASS DISTRIBUTION (FAIL / TOTAL)
+-------------------------------------------------------------------------------------
+Label           | Train Fail | Train Total | Test Fail  | Test Total
+-------------------------------------------------------------------------------------
+Head            | 9          | 160         | 2          | 40        
+Hip             | 93         | 160         | 23         | 40        
+Frontal Knee    | 82         | 160         | 21         | 40        
+Tibial Angle    | 13         | 160         | 3          | 40        
+Foot            | 67         | 160         | 17         | 40        
+Depth           | 13         | 160         | 3          | 40        
+Thoracic        | 13         | 160         | 3          | 40        
+Trunk           | 9          | 160         | 2          | 40        
+Descent         | 80         | 160         | 21         | 40        
+Ascent          | 16         | 160         | 4          | 40        
+=====================================================================================
+
+Evaluating full system on 40 test samples...
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\GitHub\3D-pose-2\evaluate_full_system.py", line 125, in <module>
+    evaluate_full_system()
+  File "C:\Users\User\Desktop\GitHub\3D-pose-2\evaluate_full_system.py", line 88, in evaluate_full_system
+    result = engine.predict(processed_sequence)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\GitHub\3D-pose-2\src\inference.py", line 157, in predict
+    logits = self.model(input_tensor)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\User\Desktop\GitHub\3D-pose-2\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\User\Desktop\GitHub\3D-pose-2\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\GitHub\3D-pose-2\src\model\gcn.py", line 91, in forward
+    x_split = x.reshape(B, N, TARGET_FRAMES, INPUT_FEATURES)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: shape '[1, 36, 100, 7]' is invalid for input of size 36000

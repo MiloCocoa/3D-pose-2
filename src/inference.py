@@ -12,36 +12,53 @@ class InferenceEngine:
         self.synthesizer = VirtualNodeSynthesizer()
         self.state_machine = SquatStateMachine()
         self.rule_head = RuleBasedHead()
+        self.input_features = 4 # Default to legacy
         
         # Load GCN (only 4 labels now)
         try:
-            self.model = MultiLabelGCN(num_labels=4).to(self.device)
             if model_path and os.path.exists(model_path):
                 state_dict = torch.load(model_path, map_location=self.device)
-                if state_dict['classifier.weight'].shape[0] == 4:
-                    self.model.load_state_dict(state_dict)
-                    print(f"Loaded 4-label model from {model_path}")
+                
+                if 'spatial_backbone.0.gcn.lin.weight' in state_dict:
+                    if 'descent_backbone.0.gcn.lin.weight' in state_dict:
+                        self.input_features = 7 # V5 Segment-Aware (4 + 3)
+                    else:
+                        self.input_features = 10 # V4-1 Multi-Stream (4 + 6)
+                    print(f"Detected Multi-Stream model input features: {self.input_features}")
                 else:
-                    print(f"Warning: Checkpoint at {model_path} has {state_dict['classifier.weight'].shape[0]} labels, but 4 expected.")
+                    first_layer_weight = state_dict.get('backbone.0.gcn.lin.weight') 
+                    if first_layer_weight is not None:
+                        in_channels = first_layer_weight.shape[1]
+                        self.input_features = in_channels // TARGET_FRAMES
+                        print(f"Detected Single-Stream model input features: {self.input_features}")
+                
+                self.model = MultiLabelGCN(in_channels=TARGET_FRAMES * self.input_features, num_labels=4).to(self.device)
+                self.model.load_state_dict(state_dict)
+                print(f"Loaded 4-label model from {model_path}")
             else:
-                print("Warning: No model path provided or model not found.")
+                from src.config import INPUT_FEATURES
+                self.input_features = INPUT_FEATURES
+                self.model = MultiLabelGCN(in_channels=TARGET_FRAMES * self.input_features, num_labels=4).to(self.device)
+                print(f"Warning: No model path found. Initializing new model with {self.input_features} features.")
         except Exception as e:
             print(f"Error loading model: {e}")
-            self.model = MultiLabelGCN(num_labels=4).to(self.device)
+            from src.config import INPUT_FEATURES
+            self.input_features = INPUT_FEATURES
+            self.model = MultiLabelGCN(in_channels=TARGET_FRAMES * self.input_features, num_labels=4).to(self.device)
         
         self.model.eval()
 
-    def resample_sequence(self, sequence):
+    def resample_sequence(self, sequence, target_frames=TARGET_FRAMES):
         num_frames = sequence.shape[0]
         num_joints = sequence.shape[1]
         num_features = sequence.shape[2]
-        if num_frames == TARGET_FRAMES:
+        if num_frames == target_frames:
             return sequence
         
         x = np.arange(num_frames)
-        x_new = np.linspace(0, num_frames - 1, TARGET_FRAMES)
+        x_new = np.linspace(0, num_frames - 1, target_frames)
         
-        resampled_sequence = np.zeros((TARGET_FRAMES, num_joints, num_features))
+        resampled_sequence = np.zeros((target_frames, num_joints, num_features))
         for joint in range(num_joints):
             for dim in range(num_features):
                 f = interp1d(x, sequence[:, joint, dim], kind='linear', fill_value="extrapolate")
@@ -85,7 +102,57 @@ class InferenceEngine:
         for f in range(norm_pose.shape[0]):
             norm_pose[f, :, :3] = (norm_pose[f, :, :3] - norm_pose[f, 33, :3]) / (avg_height + 1e-6)
 
-        resampled_pose = self.resample_sequence(norm_pose) # (100, 36, 4)
+        # Feature Injection if needed
+        if self.input_features == 7:
+            def compute_angle(v1, v2):
+                cos_theta = np.sum(v1 * v2, axis=-1) / (np.linalg.norm(v1, axis=-1) * np.linalg.norm(v2, axis=-1) + 1e-6)
+                return np.arccos(np.clip(cos_theta, -1.0, 1.0))
+
+            v_shoulder = norm_pose[:, 34, :3] - norm_pose[:, 33, :3]
+            v_vertical = np.zeros_like(v_shoulder)
+            v_vertical[:, 1] = -1.0 # MediaPipe Y is down, -1 is up
+            trunk_angle = compute_angle(v_shoulder, v_vertical)
+
+            v_lk_hip = norm_pose[:, 23, :3] - norm_pose[:, 25, :3]
+            v_lk_ank = norm_pose[:, 27, :3] - norm_pose[:, 25, :3]
+            l_knee_angle = compute_angle(v_lk_hip, v_lk_ank)
+
+            v_rk_hip = norm_pose[:, 24, :3] - norm_pose[:, 26, :3]
+            v_rk_ank = norm_pose[:, 28, :3] - norm_pose[:, 26, :3]
+            r_knee_angle = compute_angle(v_rk_hip, v_rk_ank)
+
+            trunk_angle_b = np.tile(trunk_angle[:, None, None], (1, 36, 1))
+            l_knee_angle_b = np.tile(l_knee_angle[:, None, None], (1, 36, 1))
+            r_knee_angle_b = np.tile(r_knee_angle[:, None, None], (1, 36, 1))
+            
+            ai_input_pose = np.concatenate([norm_pose[:, :, :4], trunk_angle_b, l_knee_angle_b, r_knee_angle_b], axis=2)
+        elif self.input_features == 10:
+            velocities = np.zeros((num_frames, 36, 3), dtype=np.float32)
+            velocities[1:] = norm_pose[1:, :, :3] - norm_pose[:-1, :, :3]
+            accelerations = np.zeros((num_frames, 36, 3), dtype=np.float32)
+            accelerations[1:] = velocities[1:] - velocities[:-1]
+            ai_input_pose = np.concatenate([norm_pose, velocities, accelerations], axis=2)
+        else:
+            ai_input_pose = norm_pose
+
+        # Phase-Aware Resampling (if valid)
+        bottom_idx = phases.get("BOTTOM")
+        is_valid_phases = (bottom_idx is not None and 
+                          bottom_idx > 5 and 
+                          bottom_idx < num_frames - 5 and
+                          len(phases.get("DESCENT", [])) > 0)
+
+        if is_valid_phases and self.input_features >= 7: # Use phase-aware for v4/v5
+            descent_block = ai_input_pose[:bottom_idx + 1]
+            ascent_block = ai_input_pose[bottom_idx:]
+            
+            resampled_pose = np.concatenate([
+                self.resample_sequence(descent_block, 50),
+                self.resample_sequence(ascent_block, 50)
+            ], axis=0)
+        else:
+            resampled_pose = self.resample_sequence(ai_input_pose, TARGET_FRAMES) # (100, 36, input_features)
+
         gcn_input = resampled_pose.transpose(1, 0, 2).reshape(36, -1)
         input_tensor = torch.tensor(gcn_input, dtype=torch.float32).unsqueeze(0).to(self.device)
         
@@ -152,12 +219,29 @@ class InferenceEngine:
                 confidences[label_name] = float(val)
             else:
                 confidences[label_name] = float(probs[i-6])
+
+        # Sanitization: Ensure all floats are JSON compliant (No NaN or Inf)
+        def safe_float(v):
+            if isinstance(v, (float, np.float32, np.float64)):
+                return float(v) if np.isfinite(v) else 0.0
+            return v
+
+        sanitized_rule_values = {}
+        for k, v in rule_values.items():
+            sanitized_rule_values[k] = {
+                "val": safe_float(v["val"]),
+                "threshold": safe_float(v["threshold"]),
+                "unit": v["unit"]
+            }
+
+        sanitized_confidences = {k: safe_float(v) for k, v in confidences.items()}
+        sanitized_heatmap = np.nan_to_num(joint_heatmap, nan=0.0, posinf=1.0, neginf=0.0).tolist()
         
         return {
             "mistakes": mistakes,
-            "confidences": confidences,
-            "rule_values": rule_values,
+            "confidences": sanitized_confidences,
+            "rule_values": sanitized_rule_values,
             "phase_per_frame": phase_per_frame,
-            "joint_heatmap": joint_heatmap.tolist(), # Send to frontend
+            "joint_heatmap": sanitized_heatmap,
             "phases": {k: (v if isinstance(v, int) else len(v)) for k, v in phases.items()}
         }

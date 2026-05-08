@@ -103,8 +103,8 @@ class RuleBasedHead:
         frame_severity = np.zeros((num_frames, 6))
         
         # Helper to calculate severity (0 to 1)
-        # 0 at threshold, 1 at threshold + 50% (or equivalent)
-        def calc_severity(val, thresh, scale=0.5):
+        # 0 at threshold, 1 at threshold + 25% (more aggressive transition)
+        def calc_severity(val, thresh, scale=0.25):
             if val <= thresh: return 0.0
             return float(min(1.0, (val - thresh) / (thresh * scale + 1e-6)))
 
@@ -122,35 +122,34 @@ class RuleBasedHead:
         binary[0] = 1 if avg_head_tilt > self.thresholds["HEAD_TILT"] else 0
 
         # 2. Hip Position
-        hip_tilts = []
+        hip_drops = []
         hip_shifts = []
         active_frames = phases["DESCENT"] + [phases["BOTTOM"]] + phases["ASCENT"]
         for f in range(num_frames):
             if f in active_frames:
                 left_hip = pose_seq[f, 23]
                 right_hip = pose_seq[f, 24]
-                v_hips = right_hip - left_hip
-                horizontal = np.array([1, 0, 0])
-                tilt = self.get_angle(v_hips, horizontal)
+                
+                drop = abs(left_hip[1] - right_hip[1])
                 shift = abs(pose_seq[f, 33, 0] - pose_seq[f, 34, 0])
                 
-                hip_tilts.append(tilt)
+                hip_drops.append(drop)
                 hip_shifts.append(shift)
                 
-                s_tilt = calc_severity(tilt, self.thresholds["HIP_TILT"])
+                s_drop = calc_severity(drop, self.thresholds["HIP_DROP"])
                 s_shift = calc_severity(shift, self.thresholds["HIP_SHIFT"])
-                frame_severity[f, 1] = max(s_tilt, s_shift)
+                frame_severity[f, 1] = max(s_drop, s_shift)
             
-        avg_tilt = np.mean(hip_tilts) if hip_tilts else 0
+        avg_drop = np.mean(hip_drops) if hip_drops else 0
         avg_shift = np.mean(hip_shifts) if hip_shifts else 0
-        is_tilt_error = avg_tilt > self.thresholds["HIP_TILT"]
+        is_drop_error = avg_drop > self.thresholds["HIP_DROP"]
         is_shift_error = avg_shift > self.thresholds["HIP_SHIFT"]
         
-        if is_tilt_error:
-            values["Hip"] = {"val": float(avg_tilt), "threshold": self.thresholds["HIP_TILT"], "unit": "°"}
+        if is_drop_error:
+            values["Hip"] = {"val": float(avg_drop), "threshold": self.thresholds["HIP_DROP"], "unit": "m"}
         else:
             values["Hip"] = {"val": float(avg_shift), "threshold": self.thresholds["HIP_SHIFT"], "unit": "m"}
-        binary[1] = 1 if is_tilt_error or is_shift_error else 0
+        binary[1] = 1 if is_drop_error or is_shift_error else 0
 
         # 3. Frontal Knee Position
         valgus_scores = []
@@ -208,4 +207,14 @@ class RuleBasedHead:
             for f in range(max(0, f_bot-5), min(num_frames, f_bot+6)):
                 frame_severity[f, 5] = depth_sev
             
-        return {"binary": binary, "values": values, "frame_severity": frame_severity}
+        raw_metrics = {
+            "Head": float(avg_head_tilt),
+            "Hip_Drop": float(avg_drop),
+            "Hip_Shift": float(avg_shift),
+            "Frontal Knee": float(avg_valgus),
+            "Tibial Angle": float(avg_tibia_angle),
+            "Foot": float(avg_lift),
+            "Depth": float(depth_val)
+        }
+            
+        return {"binary": binary, "values": values, "frame_severity": frame_severity, "raw_metrics": raw_metrics}

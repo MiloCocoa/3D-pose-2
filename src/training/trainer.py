@@ -17,13 +17,35 @@ def train():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Dataset & Loader
-    dataset = PoseDataset(data_dir=data_dir, report_path=VALIDATION_REPORT_PATH)
+    train_dir = os.path.join(DATA_DIR, "train")
+    dataset = PoseDataset(data_dir=train_dir, report_path=None)
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
 
     # Model, Loss, Optimizer
-    model = MultiLabelGCN().to(device)
-    # Using BCEWithLogitsLoss for multi-label classification
-    criterion = nn.BCEWithLogitsLoss()
+    model = MultiLabelGCN(num_labels=4).to(device)
+    
+    # Calculate pos_weight for loss function to handle class imbalance
+    print("Calculating class weights for loss function...")
+    import json
+    target_indices = [1, 2, 7, 9] # Thoracic, Trunk, Descent, Ascent
+    pos_counts = torch.zeros(4)
+    for filename in dataset.file_list:
+        file_path = os.path.join(dataset.data_dir, filename)
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+        raw_labels = data['metadata']['label']
+        for i, idx in enumerate(target_indices):
+            if raw_labels[idx] == "False":
+                pos_counts[i] += 1
+                
+    neg_counts = len(dataset) - pos_counts
+    pos_weight = neg_counts / torch.clamp(pos_counts, min=1.0)
+    # Removed clamp to implement full SMOTE equivalent at the loss level
+    pos_weight = pos_weight.to(device)
+    print(f"Calculated (uncapped) pos_weight: {pos_weight.cpu().numpy()}")
+
+    # Using BCEWithLogitsLoss with pos_weight
+    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     print(f"Starting training on {device}...")

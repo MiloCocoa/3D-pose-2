@@ -1,0 +1,43 @@
+(.venv) C:\Users\User\Desktop\GitHub\3D-pose-2>python evaluate_full_system.py
+Detected model input features: 10
+Loaded 4-label model from models\multi_label_gcn_v2.pth
+
+=====================================================================================
+DATASET CLASS DISTRIBUTION (FAIL / TOTAL)
+-------------------------------------------------------------------------------------
+Label           | Train Fail | Train Total | Test Fail  | Test Total
+-------------------------------------------------------------------------------------
+Head            | 9          | 160         | 2          | 40        
+Hip             | 93         | 160         | 23         | 40        
+Frontal Knee    | 82         | 160         | 21         | 40        
+Tibial Angle    | 13         | 160         | 3          | 40        
+Foot            | 67         | 160         | 17         | 40        
+Depth           | 13         | 160         | 3          | 40        
+Thoracic        | 13         | 160         | 3          | 40        
+Trunk           | 9          | 160         | 2          | 40        
+Descent         | 80         | 160         | 21         | 40        
+Ascent          | 16         | 160         | 4          | 40        
+=====================================================================================
+
+Evaluating full system on 40 test samples...
+c:\Users\User\Desktop\GitHub\3D-pose-2\.venv\Lib\site-packages\numpy\_core\fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+c:\Users\User\Desktop\GitHub\3D-pose-2\.venv\Lib\site-packages\numpy\_core\_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+=====================================================================================
+Label           | Type       | Accuracy   | Precision  | Recall     | F1-Score  
+-------------------------------------------------------------------------------------
+Head            | Rule       | 0.0500     | 0.0500     | 1.0000     | 0.0952    
+Hip             | Rule       | 0.6000     | 0.6129     | 0.8261     | 0.7037    
+Frontal Knee    | Rule       | 0.5000     | 1.0000     | 0.0476     | 0.0909    
+Tibial Angle    | Rule       | 0.6250     | 0.1250     | 0.6667     | 0.2105    
+Foot            | Rule       | 0.5500     | 0.0000     | 0.0000     | 0.0000    
+Depth           | Rule       | 0.0500     | 0.0513     | 0.6667     | 0.0952    
+Thoracic        | AI         | 0.3750     | 0.1071     | 1.0000     | 0.1935    
+Trunk           | AI         | 0.3500     | 0.0714     | 1.0000     | 0.1333    
+Descent         | AI         | 0.4750     | 0.0000     | 0.0000     | 0.0000    
+Ascent          | AI         | 0.9000     | 0.0000     | 0.0000     | 0.0000    
+-------------------------------------------------------------------------------------
+OVERALL FULL-SYSTEM SUBSET ACCURACY:                              0.0000
+=====================================================================================

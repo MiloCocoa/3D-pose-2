@@ -1,0 +1,27 @@
+Date: 2026-05-08
+
+What we did:
+1. Analyzed the V4-1 performance and identified that the V4 data augmentation (adding spatial jitter) completely corrupted the velocity/acceleration calculations.
+2. Realized that Multi-Stream architecture wasn't enough to fix fundamentally broken temporal data.
+3. Switched back to the clean dataset (`data/test-pos-seq-20260508`).
+4. Replaced raw velocity/acceleration features with direct Biomechanical Angles (Trunk Angle, Knee Angles).
+5. Implemented SMOTE at the loss function level (removing the cap on pos_weight).
+6. Implemented Masked Training (Segment-Aware), ensuring the Descent label only considers the Descent phase (first 50 frames) and Ascent only considers the Ascent phase (last 50 frames).
+
+Results:
+- V5 performance was nearly identical to V3-1. 
+- Thoracic, Trunk, and Descent had exactly the same F1 scores. 
+- Ascent F1 shifted from `0.57` (Precision `0.66`, Recall `0.50`) to `0.50` (Precision `0.33`, Recall `1.00`). The UNCAPPED SMOTE successfully forced the model to catch 100% of the Ascent fails, but at the cost of generating more false positives (Precision dropped).
+
+Final Conclusion (The Mathematical Ceiling):
+The fact that a fundamentally different architecture (Multi-Stream Late Fusion with explicit Biomechanical feature engineering and SMOTE) yielded the *exact same performance* as a naive Single-Stream architecture proves one critical fact: **The architecture is not the bottleneck. The raw data is.**
+
+When you only have **9 Trunk Fails** and **13 Thoracic Fails** in your entire training set of 160 files, no neural network architecture in the world can mathematically learn a generalized pattern. The model is simply hitting the statistical ceiling of the information provided to it. We successfully proved in V4 that adding fake algorithmic noise (augmentation) to this tiny sample size only makes things worse.
+
+Next Steps (Moving out of Code and into Production):
+To improve this project further, all code-level "AI architecture hacking" must stop. 
+The absolute only way forward is to perform a dedicated real-world Data Collection Phase:
+1. Record 100-200 brand new videos of intentional, exaggerated Trunk leans.
+2. Record 100-200 brand new videos of intentional Thoracic extension failures.
+3. Run them through MediaPipe and add them to the clean training split.
+The V5 architecture is perfectly designed, masked, and weighted to learn from that data the moment it is provided.

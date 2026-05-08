@@ -1,0 +1,20 @@
+📋 Context to Provide in the Next Session:
+
+  Project State Summary:
+  "We are working on a Dual-Head 3D Barbell Squat Form Correction system. The Rule-Based Head (Geometric) has been successfully calibrated and smoothed
+  using an outlier rejection script, proving the architecture is sound for stable torso joints (achieving ~0.77 F1-Score for Hip tracking). 
+
+  However, we hit a hard bottleneck: Extreme Class Imbalance and MediaPipe Extremity Jitter. Because our dataset is 98% 'Pass' sequences and the raw Z-axis
+  depth data is too noisy for extremities, the AI Head (ST-GCN) suffers from 'Model Blindness' (predicting 'Pass' for everything). We formally documented
+  this in DATA_PROBLEM_DEFENSE.md."
+
+  Prerequisite Completed:
+  "Since our last session, I have completed the Data Collection Phase. The data/train and data/test folders have been repopulated with a newly balanced
+  dataset containing 50-100 intentional, exaggerated 'Fail' repetitions for Knee Valgus, Heel Lifts, Descent, and Ascent faults."
+
+  Next Steps (The Action Plan):
+  "Now that the dataset is balanced, our immediate goal is to implement the advanced ST-GCN architectural upgrades we previously tabled. Please read
+  DATA_PROBLEM_DEFENSE.md (specifically Section 5: Future Implementation Roadmap) to understand the exact requirements. 
+
+  Your first task is to update src/data_utils/loader.py to implement Phase-Aware Temporal Normalization and Explicit Feature Injection (calculating
+  velocities/accelerations and concatenating them to the spatial coordinates). Do not edit the model architecture yet; start with the data loader."

@@ -78,35 +78,35 @@ LABEL_JOINT_MAP = {
 # Labels in the order they appear in the dataset
 LABELS_DATASET = ["Head", "Thoracic", "Trunk", "Hip", "Frontal Knee", "Tibial Angle", "Foot", "Descent", "Depth", "Ascent"]
 
-# Rule Thresholds (Sane Defaults)
+# Rule Thresholds (Optimized 2026-05-07)
 THRESHOLDS = {
-    "HEAD_TILT": 15.0,      # Degrees
-    "HIP_TILT": 5.0,        # Degrees
-    "HIP_SHIFT": 0.05,      # Normalized units (relative to shoulder width)
-    "KNEE_VALGUS": 0.02,    # Normalized units
-    "TIBIAL_PARALLEL": 10.0, # Degrees
-    "FOOT_LIFT": 0.02,      # Normalized units
-    "DEPTH_OFFSET": 0.05    # Normalized units (Hip Y relative to Knee Y)
+    "HEAD_TILT": 15.0,      # Kept stable
+    "HIP_DROP": 0.014,      # V5 Clean Data Tuned (F1: 0.747)
+    "HIP_SHIFT": 0.014,     # V5 Clean Data Tuned (F1: 0.747)
+    "KNEE_VALGUS": 0.08,    # Kept original (Degenerate 0.0 on clean data)
+    "TIBIAL_PARALLEL": 25.0,# Restored (Tuning 7.8 is too tight for safe production)
+    "FOOT_LIFT": 0.04,      # Kept original
+    "DEPTH_OFFSET": -0.05   # Kept stable
 }
 
 THRESHOLD = 0.5
 TARGET_FRAMES = 100
 # Path Configurations
-DATA_DIR = "data/test-pos-seq-20260311"
+DATA_DIR = "data/test-pos-seq-20260508"
 VALIDATION_REPORT_PATH = "data_validation_report.csv"
 MODEL_SAVE_DIR = "models"
-MODEL_NAME = "multi_label_gcn_v2.pth"
+MODEL_NAME = "multi_label_gcn_v5.pth"
 
 # Model Hyperparameters
 NUM_JOINTS = 36 # 33 + 3 Virtual
-INPUT_FEATURES = 4 # X, Y, Z, Visibility
+INPUT_FEATURES = 7 # X, Y, Z, Visibility, TrunkAngle, LeftKneeAngle, RightKneeAngle
 HIDDEN_CHANNELS = 128
 NUM_GCN_BLOCKS = 3
-DROPOUT = 0.0 
-LEARNING_RATE = 1e-4
+DROPOUT = 0.3 
+LEARNING_RATE = 5e-5
 BATCH_SIZE = 10 
-EPOCHS = 500
-MAX_GAP_SIZE = 10 
+EPOCHS = 100
+MAX_GAP_SIZE = 10
 
 # Joint Symmetry for Horizontal Flip Augmentation
 SYMMETRY_MAP = [

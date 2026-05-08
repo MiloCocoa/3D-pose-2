@@ -1,0 +1,21 @@
+### Project Status: Dual-Head Calibration & Imbalance Discovery - 2026-05-02
+
+**Accomplished Today:**
+1.  **Codebase Analysis:** Confirmed the integration of the Dual-Head architecture (6 Rule-based labels + 4 AI-based labels) and the `joint_heatmap` visualization logic.
+2.  **Rule Threshold Calibration:** Updated `src/config.py` from strict laboratory defaults to a "Lenient Baseline" to reduce false positives and visual flickering caused by MediaPipe jitter.
+    *   `DEPTH_OFFSET` -> 0.10
+    *   `KNEE_VALGUS` -> 0.05
+    *   `FOOT_LIFT` -> 0.05
+    *   `HIP_SHIFT` -> 0.10
+3.  **Heatmap Visual Polish:** Enhanced `frontend/src/components/Skeleton3D.tsx`. Error severity now proportionally thickens skeleton lines and uses a Green -> Yellow -> Red gradient for clearer, more intuitive feedback. Tightened the severity scale in `src/rules/engine.py` for a more aggressive visual transition upon failing a rule.
+4.  **Dataset Structure Validation:** Verified the manual splitting of dataset `20260502` into `train`, `test`, and `validate` directories. Updated data loaders in `trainer.py` and `evaluate_v2.py` to strictly use these splits, preventing data leakage.
+5.  **Critical Discovery (The Class Imbalance):** Discovered why the retrained AI Head achieved 100% accuracy but 0.0 Precision/Recall for `Descent` and `Ascent`. The new dataset splits have extreme class imbalances for these labels (e.g., 189 Pass vs 1 Fail for Descent). The model was simply predicting "Pass" for every sequence. Reverted experimental fixes to allow for a comprehensive re-planning phase.
+6.  **Strategic Replanning:** Created `plans/post20260502_analysis_and_plan.md` outlining a multi-pronged approach to fix the AI Head.
+
+**Immediate Next Steps (Start Here Next Session):**
+*   **Execute Phase 1 of `plans/post20260502_analysis_and_plan.md`:**
+    1.  **Data Augmentation:** Implement synthetic augmentation (temporal scaling/spatial noise) specifically for the rare "Fail" cases in the `train/` split for the `Descent` and `Ascent` labels.
+    2.  **Loss Re-Weighting:** Re-introduce `pos_weight` in `src/training/trainer.py`'s `BCEWithLogitsLoss` to heavily penalize missing the minority class.
+    3.  **Hyperparameter Tuning:** Increase `DROPOUT` to 0.3 and lower `LEARNING_RATE` to 5e-5 in `src/config.py` to prevent memorization of augmented data.
+    4.  **Retrain & Evaluate:** Run `trainer.py` and `evaluate_v2.py` until F1-Scores for the minority classes exceed >0.60.
+*   **Rule-Based Validation:** Run empirical tests on the `validate/` split to ensure the new "Lenient Baseline" thresholds align perfectly with human ground truth.

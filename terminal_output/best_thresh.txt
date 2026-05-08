@@ -1,0 +1,46 @@
+V3 best thresholds
+
+Label           | Best Thresh     | Best F1    | Precision  | Recall    
+----------------------------------------------------------------------
+Head            | 0.000           | 0.1065     | 0.0563     | 1.0000    
+Hip             | 0.014           | 0.7470     | 0.5962     | 1.0000    
+Frontal Knee    | 0.000           | 0.0000     | 0.0000     | 0.0000    
+Tibial Angle    | 7.826           | 0.1512     | 0.0818     | 1.0000    
+Foot            | 0.000           | 0.0000     | 0.0000     | 0.0000    
+Depth           | -0.200          | 0.1503     | 0.0813     | 1.0000    
+
+V4 best thresholds
+(.venv) C:\Users\User\Desktop\GitHub\3D-pose-2>python find_optimal_thresholds.py
+c:\Users\User\Desktop\GitHub\3D-pose-2\.venv\Lib\site-packages\numpy\_core\fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+c:\Users\User\Desktop\GitHub\3D-pose-2\.venv\Lib\site-packages\numpy\_core\_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+Loaded 531 valid sequences for threshold tuning.
+
+Label           | Best Thresh     | Best F1    | Precision  | Recall    
+----------------------------------------------------------------------
+Head            | 0.000           | 0.1336     | 0.0716     | 1.0000    
+Hip             | 0.013           | 0.8654     | 0.7628     | 1.0000    
+Frontal Knee    | 0.089           | 0.0221     | 1.0000     | 0.0112    
+Tibial Angle    | 0.000           | 0.1002     | 0.0527     | 1.0000    
+Foot            | 0.000           | 0.0000     | 0.0000     | 0.0000    
+Depth           | -0.200          | 0.1721     | 0.0942     | 1.0000    
+
+
+V5 best thresholds
+
+(.venv) C:\Users\User\Desktop\GitHub\3D-pose-2>python find_optimal_thresholds.py
+c:\Users\User\Desktop\GitHub\3D-pose-2\.venv\Lib\site-packages\numpy\_core\fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+c:\Users\User\Desktop\GitHub\3D-pose-2\.venv\Lib\site-packages\numpy\_core\_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+Loaded 160 valid sequences for threshold tuning.
+
+Label           | Best Thresh     | Best F1    | Precision  | Recall    
+----------------------------------------------------------------------
+Head            | 0.000           | 0.1065     | 0.0563     | 1.0000    
+Hip             | 0.014           | 0.7470     | 0.5962     | 1.0000    
+Frontal Knee    | 0.000           | 0.0000     | 0.0000     | 0.0000    
+Tibial Angle    | 7.826           | 0.1512     | 0.0818     | 1.0000    
+Foot            | 0.000           | 0.0000     | 0.0000     | 0.0000    
+Depth           | -0.200          | 0.1503     | 0.0813     | 1.0000    
