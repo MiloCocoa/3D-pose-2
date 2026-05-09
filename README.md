@@ -29,18 +29,24 @@ The system splits the 10 analysis labels into two specialized heads:
 1.  Ensure you have Python 3.10+ and the required packages installed from `requirements.txt`.
 2.  Run the API:
     ```bash
-    python -m src.api.main
+    uvicorn src.api.main:app --reload --port 8000
     ```
 
 ### Frontend
 1.  Navigate to `frontend/`.
 2.  Install dependencies:
     ```bash
+    cd frontend
     npm install
     ```
 3.  Start the dev server:
     ```bash
     npm run dev
+    ```
+
+### Gemini CLI
+    ```bash
+    npx @google/gemini-cli
     ```
 
 ### Analysis
